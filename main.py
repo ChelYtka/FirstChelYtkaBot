@@ -2,7 +2,11 @@ import requests
 import time
 
 API_URL = 'https://api.telegram.org/bot' # адрес обращения
+<<<<<<< HEAD
 BOT_TOKEN # токен бота
+=======
+BOT_TOKEN = '7434137903:AAFuMOeu5bLffiXR35lpLLAaHaCQfB0ACds' # токен бота
+>>>>>>> 2bedf9394a5c90a220494f6a765371475cb4c42d
 TEXT = 'Hello world!!!' # текстовый ответ
 MAX_COUNTER = 10
 
