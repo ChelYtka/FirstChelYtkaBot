@@ -2,7 +2,8 @@ import requests
 import time
 
 API_URL = 'https://api.telegram.org/bot' # адрес обращения
-BOT_TOKEN # токен бота
+f = open('token.txt')
+BOT_TOKEN = f.readline()# токен бота
 TEXT = 'Hello world!!!' # текстовый ответ
 MAX_COUNTER = 10
 
