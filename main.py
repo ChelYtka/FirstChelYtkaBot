@@ -1,46 +1,56 @@
-import requests
-import time
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import Command # Command - фильтрует апдейты на наличие новых /команд
+from aiogram.types import Message
 
-API_URL = 'https://api.telegram.org/bot' # адрес обращения
 f = open('token.txt')
 BOT_TOKEN = f.readline()# токен бота
 
-
-TEXT1 = 'Hello ' # текстовый ответ
-TEXT2 = '! I give you CAT!!!'
-ERROR_TEXT = 'Здесь должен быть кот('
-MAX_COUNTER = 10
-
-offset = -2 # -1 - возвращает последний апдейт, 0 - ничего не возвращает
-counter = 0
-chat_id: int # id чата
-timeout = 60
-API_CAT_URL = 'https://api.thecatapi.com/v1/images/search'
-
-while counter < MAX_COUNTER:
-
-    print('attempt =', counter)  #Чтобы видеть в консоли, что код живет
-    # делаем get-запрос и т.к. формат ответа известен, распарсим JSON с помощью метода json()
-    updates = requests.get(f'{API_URL}{BOT_TOKEN}/getUpdates?offset={offset + 1}&timeout={timeout}').json()
-    # json() создаёт многоуровневый словарь
-
-    if updates['result']: # проверяем, есть ли обновление
-
-        for result in updates['result']:
-
-            offset = result['update_id']
-            chat_id = result['message']['from']['id']
-            user_name = updates['result'][0]['message']['chat']['first_name']
-            cat_response = requests.get(API_CAT_URL)
-            # проверяем соединение с сайтом
-            if cat_response.status_code == 200:
-                cat_link = cat_response.json()[0]['url']
-
-                requests.get(f'{API_URL}{BOT_TOKEN}/sendMessage?chat_id={chat_id}&text={TEXT1}{user_name}{TEXT2}')
-                requests.get(f'{API_URL}{BOT_TOKEN}/sendPhoto?chat_id={chat_id}&photo={cat_link}')
-            else:
-                requests.get(f'{API_URL}{BOT_TOKEN}/sendMessage?chat_id={chat_id}&text={ERROR_TEXT}')
+# Создаем объекты бота и диспетчера
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
 
 
-    time.sleep(1)
-    counter += 1
+# Этот хэндлер будет срабатывать на команду "/start"
+async def process_start_command(message: Message):
+    await message.answer('Привет!\nМеня зовут Эхо-бот!\nНапиши мне что-нибудь')
+
+
+# Этот хэндлер будет срабатывать на команду "/help"
+async def process_help_command(message: Message):
+    await message.answer(
+        'Напиши мне что-нибудь и в ответ '
+        'я пришлю тебе твое сообщение'
+    )
+
+# Этот хэндлер будет срабатывать на отправку боту фото
+async def send_sticker_echo(message: Message):
+    await message.reply_sticker(message.sticker.file_id)
+
+# как пример, но онн сразу ловит сообщение
+# поэтому если надо делать разные ответы, нодо прописывать как стикер и просто ответ
+# Этот хэндлер будет срабатывать на любые ваши сообщения,
+# кроме команд "/start" и "/help"
+@dp.message()
+async def send_echo(message: Message):
+    try:
+        await message.send_copy(chat_id=message.chat.id)
+    except TypeError:
+        await message.reply(
+            text='Данный тип апдейтов не поддерживается '
+                 'методом send_copy'
+        )
+
+# Этот хэндлер будет срабатывать на любые ваши текстовые сообщения,
+# кроме команд "/start" и "/help"
+async def send_echo(message: Message):
+    await message.reply(text=message.text)
+
+
+# Регистрируем хэндлеры
+dp.message.register(process_start_command, Command(commands='start'))
+dp.message.register(process_help_command, Command(commands='help'))
+dp.message.register(send_sticker_echo, F.sticker)
+dp.message.register(send_echo)
+
+if __name__ == '__main__':
+    dp.run_polling(bot)
