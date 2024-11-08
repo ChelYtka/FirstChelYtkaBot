@@ -155,13 +155,6 @@ async def process_numbers_answer(message: Message):
 async def process_other_answers(message: Message):
     # добавление нового пользователя
     if message.from_user.id not in users:
-        users[message.from_user.id] = {
-            'in_game': False,
-            'secret_number': None,
-            'attempts': None,
-            'total_games': 0,
-            'wins': 0
-        }
         await message.answer(
             'Для начала работы с ботом '
             'введите команду /start '
