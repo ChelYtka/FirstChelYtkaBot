@@ -1,2 +1,5 @@
 /first_tg_bot
-token.txt
+/.vscode
+users.db
+__pycache__/
+.env
