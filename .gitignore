@@ -1,5 +1,5 @@
 /first_tg_bot
 /.vscode
-users.db
 __pycache__/
 .env
+*.db

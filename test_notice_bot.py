@@ -13,18 +13,22 @@ load_dotenv(find_dotenv())
 from handlers.user_private import user_private_router
 from common.bot_cmds_list import private
 
+from db.users_db import Database
+
+
 BOT_TOKEN = os.getenv('TOKEN')# токен бота
 
 # создаём бота и диспетчера
 bot = Bot(token = BOT_TOKEN)
 dp = Dispatcher()
 
-
+database = Database()
 
 dp.include_router(user_private_router)
 # Основная функция для запуска бота
 async def main():
     try:
+        await database.create_database()
         # удалить меню
         #await bot.delete_my_commands(scope=BotCommandScopeAllPrivateChats())
         # создать меню
