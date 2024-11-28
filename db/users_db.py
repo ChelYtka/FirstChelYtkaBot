@@ -6,11 +6,12 @@ import aiosqlite
 class Database:
     def __init__(self, db_name='bot_db.db'):
         # инициализируем класс
-        self.db_name = db_name
+        self.db_name = r'db/'+db_name
 
     async def create_database(self):
         # создание бд и таблиц, если их нет
 
+        # подключаемя к бд с проверкой на ошибки
         async with aiosqlite.connect(self.db_name) as db:
             # создаём users
             await db.execute('''
@@ -81,6 +82,13 @@ class Database:
             cursor = await db.execute("SELECT * FROM Users WHERE telegram_id = ?",
                                       (str(telegram_id),))
             return await cursor.fetchone()
+        
+
+    async def get_admin(self, telegram_id):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute("SELECT * FROM Users WHERE telegram_id = ?", str(telegram_id),)
+            return await cursor.fetchone()
+
 
 
 
