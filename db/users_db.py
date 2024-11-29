@@ -88,6 +88,12 @@ class Database:
         async with aiosqlite.connect(self.db_name) as db:
             cursor = await db.execute("SELECT * FROM Users WHERE telegram_id = ?", str(telegram_id),)
             return await cursor.fetchone()
+        
+        
+    async def search_group(self, group_name):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute("SELECT * FROM Group WHERE group_name = ?", str(group_name),)
+            return await cursor.fetchone()
 
 
 
