@@ -10,7 +10,6 @@ from aiogram.types import Message, BotCommandScopeAllPrivateChats
 from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv())
 
-from handlers.user_private import user_private_router
 from handlers.registration_private import registration_private_router
 from common.bot_cmds_list import private
 
@@ -29,7 +28,6 @@ dp = Dispatcher()
 database = Database()
 
 dp.include_router(registration_private_router)
-#dp.include_router(user_private_router)
 
 # Основная функция для запуска бота
 async def main():
