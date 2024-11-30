@@ -30,9 +30,9 @@ async def process_start_cmd(message : Message, bot : Bot, state : FSMContext):
     db_user = await database.get_user(user_id)
     print(db_user)
     # если юзера нет
-    if not db_user:
+    if db_user == None:
         # проверяем на админа
-        if str(user_id) not in bot.admin_list:
+        if str(user_id) in bot.admin_list:
             # добавляем нового админа
             await database.add_user(user_id, username, 'admin')
             await message.answer\
@@ -53,18 +53,12 @@ async def process_start_cmd(message : Message, bot : Bot, state : FSMContext):
             (
                 f'Привет {username}!. Рады приветствовать в боте.\n'
                 'Чтобы продолжить регистрацию, укажи введи свою роль:\n',
-                reply_markup=reply.get_keyboard\
-                (
-                    "Студент",
-                    "Староста",
-                    placeholder="Выбор роли",
-                    sizes=(2,)
-                )
+                '\t/студент\n\t/староста'
             )
             await state.set_state(Registration.role)
     else:
         # проверяем, админ ли это и говорим больше не писать
-        if str(user_id) not in bot.admin_list:
+        if db_user[3] != 'admin':
             # не админ
             await message.answer\
             (
@@ -97,10 +91,10 @@ async def process_start_cmd(message : Message, bot : Bot, state : FSMContext):
             )
         
 
-
+    ''' для студента '''
 # выбор группы для студента
-@registration_private_router.message(Registration.role, F.text == "Студент")
-async def process_role_choise(message : Message, state : FSMContext):
+@registration_private_router.message(Registration.role, Command("cтудент"))
+async def process_student_role(message : Message, state : FSMContext):
     await state.update_data(role="student")
     await message.answer\
         (
@@ -111,41 +105,84 @@ async def process_role_choise(message : Message, state : FSMContext):
 
 # поиск группы студента
 @registration_private_router.message(Registration.group, F.text)
-async def process_search_group(message : Message, bot : Bot, state : FSMContext):
+async def process_add_group(message : Message, state : FSMContext):
     # ищем группу в бд
-    user_group = message.text.lower()
+    user_group = message.text.casefold()
     group = await database.search_group(user_group)
-    # если нашли уведомляем пользователя и добавляем в FSM
-    if group:
-        await message.answer\
-            (
-                f'Отлично!\n{message.from_user.username}, я нашёл твою группу!'
-            )
-        # добавляем юзера
-        data = await state.get_data()
-        await database.add_user(str(message.from_user.id), message.from_user.username, data['role'], user_group)
-
-        await message.answer\
-            (
-                'Теперь тебе доступны возможности бота.\n'
-                'С помощью кнопок ниже можешь посмотреть, к чему надо готовиться',
-                reply_markup=reply.get_keyboard\
+    data = await state.get_data()
+    # проверка на админа\
+    if data['role'] != 'headman':
+        # если нашли уведомляем пользователя и добавляем в FSM
+        if group:
+            await message.answer\
                 (
-                    "Задачи",
-                    "задача",
-                    placeholder="список",
-                    sizes=(2,)
+                    f'Отлично!\n{message.from_user.username}, я нашёл твою группу!'
                 )
+            # добавляем юзера
+            await database.add_user(str(message.from_user.id), message.from_user.username, data['role'], user_group)
+
+            await message.answer\
+                (
+                    'Теперь тебе доступны возможности бота.\n'
+                    'С помощью кнопок ниже можешь посмотреть, к чему надо готовиться',
+                    reply_markup=reply.get_keyboard\
+                    (
+                        "Задачи",
+                        "задача",
+                        placeholder="список",
+                        sizes=(2,)
+                    )
+                )
+        else: 
+            await message.answer\
+            (
+                'Звиняй, что-то не так.\n'
+                'Возможно староста ещё не создал группу. Напиши ему!'
             )
-        await state.clear()
-    else: 
+    else:
+        if not group:
+            await message.answer\
+            (
+                'Звиняй, но такая группа уже есть.\n'
+                'Попробуй ввести ещё раз'
+            )
+            await state.set_state(Registration.group)
+            return
+        else:# дописать
+            await database.add_group()
+
+    await state.clear()
+
+
+    ''' для старосты '''
+#перекидываем на админа, чтобы тот выдал токен
+@registration_private_router.message(Registration.role, Command('староста'))
+async def process_get_token(message : Message, state : FSMContext):
+    await state.update_data(role = 'headman')
+    await message.answer\
+    (
+        f'{message.from_user.username}, для продолжения регистрации обратись к админу\n'
+        f'{message.text}\n'
+        'Попроси у него токен и введи его сюда.'
+    )
+    state.set_state(Registration.token)
+
+
+@registration_private_router.message(Registration.token, F.text)
+async def process_headman_role(message : Message, state : FSMContext):
+    await state.update_data(token=message.text)
+    # ищем токен
+    token = await database.search_token(message.text)
+    # если есть записываем старосту
+    if token:
         await message.answer\
         (
-            'Звиняй, что-то не так.\n'
-            'Возможно староста ещё не создал группу. Напиши ему!'
-            'Или попробуй ещё раз ввести свою группу.'
+            'Введите свою группу.'
         )
         await state.set_state(Registration.group)
+
+
+
 
 
 

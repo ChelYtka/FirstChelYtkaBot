@@ -83,17 +83,40 @@ class Database:
                                       (str(telegram_id),))
             return await cursor.fetchone()
         
-
-    async def get_admin(self, telegram_id):
+    # дописать
+    # создание группы
+    async def add_group(self, group):
         async with aiosqlite.connect(self.db_name) as db:
-            cursor = await db.execute("SELECT * FROM Users WHERE telegram_id = ?", str(telegram_id),)
-            return await cursor.fetchone()
-        
-        
+            await db.execute('''
+                            INSERT INTO Groups(group_name, headman_id)
+                             VALUES(?, ?)
+                             ''', (str(group), )
+                             )
+            await db.commit
+
+    # поиск группы
     async def search_group(self, group_name):
         async with aiosqlite.connect(self.db_name) as db:
-            cursor = await db.execute("SELECT * FROM Group WHERE group_name = ?", str(group_name),)
+            cursor = await db.execute("SELECT * FROM Groups WHERE group_name = ?", (str(group_name),))
             return await cursor.fetchone()
+        
+    # добавление токена
+    async def add_token(self, token):
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute('''
+                            INSERT INTO Tokens(token, is_used)
+                             VALUES(?, ?)
+                             ''', (str(token), False)
+                             )
+            await db.commit
+
+    # поиск токена
+    async def search_token(self, token):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute("SELECT * FROM Tokens WHERE token= ?", (str(token),))
+            return await cursor.fetchone()
+        
+    
 
 
 
