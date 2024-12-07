@@ -83,6 +83,8 @@ class Database:
                                       (str(telegram_id),))
             return await cursor.fetchone()
         
+
+
     # дописать
     # создание группы
     async def add_group(self, group):
@@ -100,6 +102,20 @@ class Database:
             cursor = await db.execute("SELECT * FROM Groups WHERE group_name = ?", (str(group_name),))
             return await cursor.fetchone()
         
+    # возврат групп    
+    async def return_groups(self):
+        async with aiosqlite.connect(self.db_name) as db:
+            cursor = await db.execute("SELECT * FROM Groups")
+            return await cursor.fetchone()   
+        
+    # удаление группы    
+    async def delete_group(self, group_name):
+        async with aiosqlite.connect(self.db_name) as db:
+            await db.execute("DELETE FROM Groups WHERE group_name = ?", (str(group_name),))
+            await db.commit
+    
+
+
     # добавление токена
     async def add_token(self, token):
         async with aiosqlite.connect(self.db_name) as db:
@@ -117,6 +133,21 @@ class Database:
             return await cursor.fetchone()
         
     
+    async def number(self):
+        async with aiosqlite.connect(self.db_name) as db:
+            # Получаем количество пользователей
+            cursor1 = await db.execute("SELECT Count(*) FROM Users")
+            user_count = await cursor1.fetchone()  # Извлекаем результат
+            user_count = user_count[0]  # Получаем значение из кортежа
+
+            # Получаем количество групп
+            cursor2 = await db.execute("SELECT Count(*) FROM Groups")
+            group_count = await cursor2.fetchone()  # Извлекаем результат
+            group_count = group_count[0]  # Получаем значение из кортежа
+
+        return [user_count, group_count]  # Возвращаем список с количеством
+        
+
 
 
 

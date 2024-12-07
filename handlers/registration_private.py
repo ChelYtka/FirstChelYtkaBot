@@ -52,8 +52,8 @@ async def process_start_cmd(message : Message, bot : Bot, state : FSMContext):
             await message.answer\
             (
                 f'Привет {username}!. Рады приветствовать в боте.\n'
-                'Чтобы продолжить регистрацию, укажи введи свою роль:\n',
-                '\t/студент\n\t/староста'
+                'Чтобы продолжить регистрацию, укажи введи свою роль:\n'
+                '\t/student\n\t/headman'
             )
             await state.set_state(Registration.role)
     else:
@@ -93,7 +93,7 @@ async def process_start_cmd(message : Message, bot : Bot, state : FSMContext):
 
     ''' для студента '''
 # выбор группы для студента
-@registration_private_router.message(Registration.role, Command("cтудент"))
+@registration_private_router.message(Registration.role, Command("student"))
 async def process_student_role(message : Message, state : FSMContext):
     await state.update_data(role="student")
     await message.answer\
@@ -156,7 +156,7 @@ async def process_add_group(message : Message, state : FSMContext):
 
     ''' для старосты '''
 #перекидываем на админа, чтобы тот выдал токен
-@registration_private_router.message(Registration.role, Command('староста'))
+@registration_private_router.message(Registration.role, Command('headman'))
 async def process_get_token(message : Message, state : FSMContext):
     await state.update_data(role = 'headman')
     await message.answer\

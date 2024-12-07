@@ -21,15 +21,15 @@ BOT_TOKEN = os.getenv('TOKEN')# токен бота
 
 # создаём бота и диспетчера
 bot = Bot(token = BOT_TOKEN)
-bot.admin_list = ['0']
-#bot.admin_list = os.getenv('ADMIN_LIST')
+#bot.admin_list = ['0']
+bot.admin_list = os.getenv('ADMIN_LIST').split(',')
 
 dp = Dispatcher()
 
 database = Database()
 
 dp.include_router(registration_private_router)
-#dp.include_router(admin_private_router)
+dp.include_router(admin_private_router)
 
 
 # Основная функция для запуска бота

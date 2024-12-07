@@ -16,7 +16,7 @@ database = Database()
 
 #обработчик
 admin_private_router = Router()
-#admin_private_router.message.filter(ChatTypeFilter(['private']), IsAdmin())
+admin_private_router.message.filter(ChatTypeFilter(['private']), IsAdmin())
 
 ADMIN_KB = reply.get_keyboard(
         'группы',
@@ -32,11 +32,45 @@ ADMIN_KB = reply.get_keyboard(
 активность
 '''
 
-@admin_private_router.message(F.text == 'админ')
-async def process_admin_check(message : Message, bot : Bot):
-    if message.from_user.id in bot.admin_list:
-        await message.answer('Что вы хотели, мой господин?')
+class Delete(StatesGroup):
+    group = State()
 
+@admin_private_router.message(StateFilter(None), F.text == 'анигиляция')
+async def process_delete_group(message : Message, state : FSMContext):
+    await message.answer('Введите название группы')
+    await state.set_state(Delete.group)
+
+@admin_private_router.message(Delete.group)
+async def process_search_group(message : Message, state : FSMContext):
+    await state.update_data(group = message.text)
+    group = await database.search_group(message.text.casefold())
+    if group != None:
+        await database.delete_group(group[1])
+        await message.answer('Группа успешно удалена')
+    else:
+        await message.answer('Звиняй, не нашёл группу')
+    await state.clear()
+
+    
 @admin_private_router.message(F.text == 'группы')
 async def process_check_group(message : Message):
-    pass
+    groups = await database.return_groups()
+    if groups != None:
+        line = ''
+        for group in groups:
+            line += ('/n' + group[1])
+        await message.answer(
+            f'Вот список все групп:{line}'
+        )
+    else:
+        await message.answer('Групп нет')   
+
+
+
+@admin_private_router.message(F.text == 'активность')
+async def process_delete_group(message : Message):
+    active = await database.number()
+    await message.answer(f'Всего в боте:\n'
+                         f'\tПользователей - {active[0]}\n'
+                         f'\tГрупп - {active[1]}')
+
